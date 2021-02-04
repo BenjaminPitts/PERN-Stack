@@ -4,7 +4,7 @@ class App extends React.Component {
     }
 
     componentDidMount = () => {
-        axios.get('/people').then(
+        axios.get('https://pern-test0987654321.herokuapp.com/people').then(
             (response) => {
                 this.setState({
                     people:response.data
@@ -16,7 +16,7 @@ class App extends React.Component {
     createPerson = (event) => {
         event.preventDefault();
         axios.post(
-            '/people',
+            'https://pern-test0987654321.herokuapp.com/people',
             {
                 name:this.state.newPersonName,
                 age:this.state.newPersonAge,
@@ -43,7 +43,7 @@ class App extends React.Component {
     }
 
     deletePerson = (event) => {
-        axios.delete('/people/' + event.target.value).then(
+        axios.delete('https://pern-test0987654321.herokuapp.com/people/' + event.target.value).then(
             (response) => {
                 this.setState({
                     people:response.data
@@ -57,7 +57,7 @@ class App extends React.Component {
         event.preventDefault();
         const id = event.target.getAttribute('id');
         axios.put(
-            '/people/' + id,
+            'https://pern-test0987654321.herokuapp.com/people/' + id,
             {
                 name:this.state.updatePersonName,
                 age:this.state.updatePersonAge,
