@@ -1,128 +1,176 @@
+//import React, { Component } from 'react'
+import Quiz from './components/Quiz'
+//import axios from 'axios'
+
 class App extends React.Component {
-    state = {
-        people:[]
+  state = {
+    question: '',
+    answer: '',
+    answer_char: '',
+    point_value: '',
+    input: '',
+    correct: '',
+    points: 0,
+    quizq: [],
+  }
+
+  handleChange = (event) => {
+      this.setState({
+        [event.target.id]: event.target.value,
+        input: event.target.value
+      })
+    }
+
+    handleSubmit = (event) => {
+      // event.preventDefault()
+      axios.post('/people', this.state).then((response) => {
+        console.log(response.data)
+        this.setState({
+          quizq: [response.data],
+          question: response.data.question,
+          answer: response.data.answer,
+          answer_char: response.data.answer_char,
+          point_value: parseInt(response.data.point_value)
+        })
+      })
+    }
+
+    updateQuestion = (event) => {
+      event.preventDefault()
+      event.target.reset()
+      const id = event.target.id
+      axios.put('/people/' + id, this.state).then((response) => {
+        this.getQuestion()
+      })
+    }
+
+    deleteQuestion = (event) => {
+      axios.delete('/people/' + event.target.value).then((response) => {
+        this.getQuestion()
+      })
+    }
+
+    getQuestion = () => {
+      axios
+      .get('/people')
+      .then(
+        (response) => this.setState({
+          quizq: response.data,
+          question: response.data[0].question,
+          answer: response.data[0].answer,
+          answer_char: response.data[0].answer_char,
+          point_value: parseInt(response.data[0].point_value)
+        }),
+        (err) => console.error(err)
+      )
+      .catch((error) => console.error(error))
+    }
+
+    isCorrect=()=>{
+      this.setState({
+        correct:'CORRECT!'
+      })
+    }
+    isIncorrect=(event)=>{
+      this.setState({
+        correct:'INCORRECT!'
+      })
+          if (this.state.points < 0) {
+            this.youLose()
+          }
+    }
+    youLose=()=>{
+        this.setState({
+          correct: 'YOU CLEARLY NEED MORE PRACTCE!'
+        })
     }
 
     componentDidMount = () => {
-        axios.get('https://pern-test0987654321.herokuapp.com/people').then(
-            (response) => {
-                this.setState({
-                    people:response.data
-                })
-            }
-        )
+      this.getQuestion()
     }
 
-    createPerson = (event) => {
-        event.preventDefault();
-        axios.post(
-            'https://pern-test0987654321.herokuapp.com/people',
-            {
-                name:this.state.newPersonName,
-                age:this.state.newPersonAge,
-            }
-        ).then(
-            (response) => {
-                this.setState({
-                    people:response.data
-                })
-            }
-        )
+    addPoints=()=>{
+      this.setState({
+        points: this.state.points += this.state.point_value
+      })
     }
 
-    changeNewPersonAge = (event) => {
-        this.setState({
-            newPersonAge:event.target.value
-        });
+    removePoints=()=>{
+      this.setState({
+        points:this.state.points -= this.state.point_value
+      })
     }
 
-    changeNewPersonName = (event) => {
-        this.setState({
-            newPersonName:event.target.value
-        });
-    }
+    isTrue=(event)=>{
+        console.log(this.state)
+        if(this.state.answer_char === this.state.input.toUpperCase()) {
+          this.isCorrect()
+          this.addPoints()
+          this.getQuestion()
+          event.preventDefault()
+        } else {
+          this.isIncorrect()
+          this.removePoints()
+          event.preventDefault()
+          event.target.reset()
+        }
+      }
 
-    deletePerson = (event) => {
-        axios.delete('https://pern-test0987654321.herokuapp.com/people/' + event.target.value).then(
-            (response) => {
-                this.setState({
-                    people:response.data
-                })
-            }
-        )
 
-    }
+render = () => {
+return (
+<div className='container'>
+  <div id='headerBar'>
+    <div><h1>Quiz.js</h1></div>
+    <div></div>
+    <div></div>
+  </div>
+  <div className='main'>
+  <details>
+    <summary>createNewQuestion:</summary>
+      <form onSubmit={this.handleSubmit}>
+      <label htmlFor='question'>enterQuestion:</label>
+      <input type='text' id='question' onChange={this.handleChange} />
+      <br />
+      <label htmlFor='answer'>choices(A,B,C,D):</label>
+      <input type='text' id='answer' onChange={this.handleChange} />
+      <br />
+      <label htmlFor='answer_char'>answer(A,B,C,D):</label>
+      <input type='text' id='answer_char' onChange={this.handleChange} />
+      <br />
+      <label htmlFor='point_value'>pointValue:</label>
+      <input type='text' id='point_value' onChange={this.handleChange} />
+      <br />
+      <input type='submit' value='createQuestion' />
+      </form>
+</details>
+<br />
+<h2>currentPoints: {this.state.points}</h2>
 
-    updatePerson = (event) => {
-        event.preventDefault();
-        const id = event.target.getAttribute('id');
-        axios.put(
-            'https://pern-test0987654321.herokuapp.com/people/' + id,
-            {
-                name:this.state.updatePersonName,
-                age:this.state.updatePersonAge,
-            }
-        ).then(
-            (response) => {
-                this.setState({
-                    people:response.data,
-                    name:'',
-                    age:null,
-                })
-            }
-        )
-    }
+ <div className='quiz'>
+  {this.state.quizq.map((quiz) => {
 
-    changeUpdatePersonName = (event) => {
-        this.setState(
-            {
-                updatePersonName:event.target.value
-            }
-        )
-    }
+    return  <Quiz quiz={quiz} key={quiz.id}
+    updateQuestion={this.updateQuestion}
+    deleteQuestion={this.deleteQuestion}
+    handleChange={this.handleChange}
+    isTrue={this.isTrue}
+    />
+})}
 
-    changeUpdatePersonAge = (event) => {
-        this.setState(
-            {
-                updatePersonAge:event.target.value
-            }
-        )
-    }
+<div className='correct'>
+<h2>{this.state.correct}</h2>
+</div>
 
-    render = () => {
-        return <div>
-            <h2>Create New Person</h2>
-            <form onSubmit={this.createPerson}>
-                <input onKeyUp={this.changeNewPersonName} type="text" placeholder="name" /><br/>
-                <input onKeyUp={this.changeNewPersonAge} type="number" placeholder="age" /><br/>
-                <input type="submit" value="Create Person" />
-            </form>
-            <h2>List of People</h2>
-            <ul>
-                {
-                    this.state.people.map(
-                        (person, index) => {
-                            return <li key={index}>
+      </div>
+    </div>
+ </div>
+    )
 
-                                {person.name}: {person.age}
-                                <br />
-                                <form id={person.id} onSubmit={this.updatePerson}>
-                                    <input onKeyUp={this.changeUpdatePersonName} type="text" placeholder="name"/><br/>
-                                    <input onKeyUp={this.changeUpdatePersonAge} type="number" placeholder="age"/><br/>
-                                    <input type="submit" value="Update Person"/>
-                                    <br />
-                                    <button value={person.id} onClick={this.deletePerson}>DELETE</button>
-                                </form>
-                                <br />
-                            </li>
-
-                        }
-                    )
-                }
-            </ul>
-        </div>
-    }
+  }
 }
+
+
 
 ReactDOM.render(
     <App></App>,
